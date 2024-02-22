@@ -1,5 +1,6 @@
 package ms.access.MSAccess.service;
 
+import ms.access.MSAccess.advice.ExecutionTimeTrackerAdvice;
 import ms.access.MSAccess.model.ProsesLogLine;
 import ms.access.MSAccess.model.ProsesLogTable;
 import ms.access.MSAccess.repository.ProsesLogLineRepository;
@@ -12,27 +13,36 @@ import java.util.List;
 public class MsAccessService {
     private final ProsesLogLineRepository prosesLogLineRepository;
     private final ProsesLogTableRepository prosesLogTableRepository;
+    private final ExecutionTimeTrackerAdvice executionTimeTrackerAdvice;
 
-    public MsAccessService(ProsesLogLineRepository prosesLogLineRepository, ProsesLogTableRepository prosesLogTableRepository) {
+    public MsAccessService(ProsesLogLineRepository prosesLogLineRepository, ProsesLogTableRepository prosesLogTableRepository, ExecutionTimeTrackerAdvice executionTimeTrackerAdvice) {
         this.prosesLogLineRepository = prosesLogLineRepository;
         this.prosesLogTableRepository = prosesLogTableRepository;
+        this.executionTimeTrackerAdvice = executionTimeTrackerAdvice;
     }
 
     public List<ProsesLogLine> getAllProsesLogLine() {
         return prosesLogLineRepository.getAllProsesLogLine() ;
     }
 
-    public ProsesLogLine saveProsesLogLine(ProsesLogLine proseslogline) {
-        return prosesLogLineRepository.saveProsesLogLine(proseslogline);
+    public void saveProsesLogLine(List<ProsesLogLine> proseslogline) {
+        for(ProsesLogLine logLine : proseslogline){
+            prosesLogLineRepository.saveProsesLogLine(logLine);
+        }
     }
-
 
     public List<ProsesLogTable> getAllProsesLogTable() {
         return prosesLogTableRepository.getAllProsesLogTable() ;
     }
 
-    public ProsesLogTable saveProsesLogTable(ProsesLogTable proseslogtable) {
-        return prosesLogTableRepository.saveProsesLogTable(proseslogtable);
+    public void saveProsesLogTable(List<ProsesLogTable> prosesLogTables) {
+        for (ProsesLogTable logTable : prosesLogTables){
+            prosesLogTableRepository.saveProsesLogTable(logTable);
+        }
+    }
+
+    public String averageExecutionTime(){
+        return String.valueOf(executionTimeTrackerAdvice.getAverageExecutionTime());
     }
 
 }

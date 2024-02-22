@@ -2,9 +2,20 @@ package ms.access.MSAccess.service;
 
 import ms.access.MSAccess.model.ProsesLogLine;
 import ms.access.MSAccess.model.ProsesLogTable;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -13,143 +24,170 @@ import java.util.List;
 @Service
 public class FileService {
 
-    public ArrayList<String> readFile(String filename){
-        ArrayList<String> list = new ArrayList<>();
-        try {
-            String line = "";
-            BufferedReader br = new BufferedReader(new FileReader("D:\\Kuliah\\Semester 8\\Pengujian Sistem\\Data\\Data-1\\" + filename));
-            int i = 0;
-            while((line=br.readLine()) != null){
-                String coloms = line;
-                if(i != 0){
-                    list.add(coloms);
-                }
-                i++;
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileService.class);
+    @Autowired
+    private MsAccessService service;
+
+    public List<MultipartFile> cekCsvFormat(List<MultipartFile> files){
+        List<MultipartFile> fileList = new ArrayList<>();
+         for(MultipartFile file : files){
+            String type = "text/csv";
+            if(type.equals(file.getContentType())){
+                fileList.add(file);
             }
-            br.close();
-            return list;
-        }catch (Exception e){
-            System.out.println(e.getMessage());
-            return list;
+        }
+        return fileList;
+    }
+
+    public void prosesDanSaveData(MultipartFile file){
+        try{
+            if(file.getOriginalFilename().contains("ProcessLogLine")){
+                List<ProsesLogLine> logLines = csvKeLogLines(file.getInputStream());
+                service.saveProsesLogLine(logLines);
+            }else if(file.getOriginalFilename().contains("ProcessLogTable")){
+                List<ProsesLogTable> logTables = csvKeLogTables(file.getInputStream());
+                service.saveProsesLogTable(logTables);
+            }
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 
-    public List<ProsesLogLine> ubahKeProsesLogLines(ArrayList<String> data){
-        List<ProsesLogLine> logLines = new ArrayList<>();
-        for (String line: data){
-            ProsesLogLine logLine  = new ProsesLogLine();
 
-            String[] coloms = line.split(",");
-            logLine.setCmpnycd(coloms[0]);
-            logLine.setRcvno(coloms[1]);
-            logLine.setRxArrangementNumber(coloms[2]);
-            logLine.setProcessLogCount(Integer.parseInt(coloms[3]));
-            logLine.setLensRlType(coloms[4]);
-            logLine.setPreviousProcessNumber(Integer.parseInt(coloms[5]));
-            logLine.setPreviousSubprocessNumber(Integer.parseInt(coloms[6]));
-            logLine.setCurrentProcessNumber(Integer.parseInt(coloms[7]));
-            logLine.setCurrentSubprocessNumber(Integer.parseInt(coloms[8]));
-            logLine.setDipLotNumber(coloms[9]);
-            logLine.setCoatLotNumber(coloms[10]);
-            logLine.setBreakageReasonNumber(coloms[11]);
-            logLine.setBreakageResponsibleProcessNumber(coloms[12]);
-            logLine.setProcessFlag1(coloms[13]);
-            logLine.setProcessFlag2(coloms[14]);
-            logLine.setProcessFlag3(coloms[15]);
-            logLine.setProcessFlag4(coloms[16]);
-            logLine.setProcessFlag5(coloms[17]);
-            logLine.setProcessFlag6(coloms[18]);
-            logLine.setProcessFlag7(coloms[19]);
-            logLine.setProcessFlag8(coloms[20]);
-            logLine.setProcessFlag9(coloms[21]);
-            logLine.setProcessFlag10(coloms[22]);
-            logLine.setProcessFlag11(coloms[23]);
-            logLine.setProcessFlag12(coloms[24]);
-            logLine.setProcessFlag13(coloms[25]);
-            logLine.setProcessFlag14(coloms[26]);
-            logLine.setProcessFlag15(coloms[27]);
-            logLine.setProcessFlag16(coloms[28]);
-            logLine.setAdditionalTreatmentType1(coloms[29]);
-            logLine.setAdditionalTreatmentType2(coloms[30]);
-            logLine.setAdditionalTreatmentType3(coloms[31]);
-            logLine.setAdditionalTreatmentType4(coloms[32]);
-            logLine.setAdditionalTreatmentType5(coloms[33]);
-            logLine.setAdditionalTreatmentType6(coloms[34]);
-            logLine.setAdditionalTreatmentType7(coloms[35]);
-            logLine.setAdditionalTreatmentType8(coloms[36]);
-            logLine.setAdditionalTreatmentType9(coloms[37]);
-            logLine.setAdditionalTreatmentType10(coloms[38]);
-            logLine.setAdditionalTreatmentType11(coloms[39]);
-            logLine.setAdditionalTreatmentType12(coloms[40]);
-            logLine.setAdditionalTreatmentType13(coloms[41]);
-            logLine.setAdditionalTreatmentType14(coloms[42]);
-            logLine.setAdditionalTreatmentType15(coloms[43]);
-            logLine.setAdditionalTreatmentType16(coloms[44]);
-            logLine.setAdditionalTreatmentType17(coloms[45]);
-            logLine.setAdditionalTreatmentType18(coloms[46]);
-            logLine.setAdditionalTreatmentType19(coloms[47]);
-            logLine.setAdditionalTreatmentType20(coloms[48]);
-            logLine.setMaterialType(coloms[49]);
-            logLine.setMaterialFLensCode(coloms[50]);
-            logLine.setMaterialFColorCoatCode(coloms[51]);
-            logLine.setMaterialFLensName(coloms[52]);
-            logLine.setMaterialFLensColor(coloms[53]);
-            logLine.setMaterialFLensCoat(coloms[54]);
-            logLine.setMaterialFLensCylinderType(coloms[55]);
-            logLine.setMaterialFLensSphere(coloms[56]);
-            logLine.setMaterialFLensCylinder(coloms[57]);
-            logLine.setMaterialFLensAxis(coloms[58]);
-            logLine.setMaterialFLensAddition(coloms[59]);
-            logLine.setMaterialFLensDiameter(coloms[60]);
-            logLine.setMaterialFOPC(coloms[61]);
-            logLine.setMaterialSLensCode(coloms[62]);
-            logLine.setMaterialSLensName(coloms[63]);
-            logLine.setMaterialSLensColor(coloms[64]);
-            logLine.setMaterialSLensMaker(coloms[65]);
-            logLine.setMaterialSLensNominalBC(coloms[66]);
-            logLine.setMaterialSLensDiameter(coloms[67]);
-            logLine.setMaterialSLensThicknessType(coloms[68]);
-            logLine.setMaterialSLensAddition(coloms[69]);
-            logLine.setMaterialSOPC(coloms[70]);
-            logLine.setMaterialRLensCode(coloms[71]);
-            logLine.setMaterialRColorCoatCode(coloms[72]);
-            logLine.setMaterialRLensName(coloms[73]);
-            logLine.setMaterialRLensColor(coloms[74]);
-            logLine.setMaterialRLensCoat(coloms[75]);
-            logLine.setMaterialRLensCylinderType(coloms[76]);
-            logLine.setMaterialRLensSphere(coloms[77]);
-            logLine.setMaterialRLensCylinder(coloms[78]);
-            logLine.setMaterialRLensAxis(coloms[79]);
-            logLine.setMaterialRLensAddition(coloms[80]);
-            logLine.setMaterialRLensDiameter(coloms[81]);
-            logLine.setAmddate(LocalDateTime.parse(coloms[82], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSS")));
+    public List<ProsesLogLine> csvKeLogLines(InputStream data) throws IOException {
+        List<ProsesLogLine> result;
+        try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(data, StandardCharsets.UTF_8));
+             CSVParser csvParser = new CSVParser(fileReader,
+                     CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim())
+        ) {
+            List<CSVRecord> records = csvParser.getRecords();
+            List<ProsesLogLine> logLines = new ArrayList<>();
+            for (CSVRecord record : records) {
+                ProsesLogLine logLine = new ProsesLogLine(
+                        record.get("CMPNYCD"),
+                        record.get("RCVNO"),
+                        record.get("RX_ARRANGEMENT_NUMBER"),
+                        Integer.parseInt(record.get("PROCESS_LOG_COUNT")),
+                        record.get("LENS_RL_TYPE"),
+                        Integer.parseInt(record.get("PREVIOUS_PROCESS_NUMBER")),
+                        Integer.parseInt(record.get("PREVIOUS_SUBPROCESS_NUMBER")),
+                        Integer.parseInt(record.get("CURRENT_PROCESS_NUMBER")),
+                        Integer.parseInt(record.get("CURRENT_SUBPROCESS_NUMBER")),
+                        record.get("DIP_LOT_NUMBER"),
+                        record.get("COAT_LOT_NUMBER"),
+                        record.get("BREAKAGE_REASON_NUMBER"),
+                        record.get("BREAKAGE_RESPONSIBLE_PROCESS_NUMBER"),
+                        record.get("PROCESS_FLAG_1"),
+                        record.get("PROCESS_FLAG_2"),
+                        record.get("PROCESS_FLAG_3"),
+                        record.get("PROCESS_FLAG_4"),
+                        record.get("PROCESS_FLAG_5"),
+                        record.get("PROCESS_FLAG_6"),
+                        record.get("PROCESS_FLAG_7"),
+                        record.get("PROCESS_FLAG_8"),
+                        record.get("PROCESS_FLAG_9"),
+                        record.get("PROCESS_FLAG_10"),
+                        record.get("PROCESS_FLAG_11"),
+                        record.get("PROCESS_FLAG_12"),
+                        record.get("PROCESS_FLAG_13"),
+                        record.get("PROCESS_FLAG_14"),
+                        record.get("PROCESS_FLAG_15"),
+                        record.get("PROCESS_FLAG_16"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_1"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_2"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_3"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_4"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_5"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_6"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_7"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_8"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_9"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_10"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_11"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_12"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_13"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_14"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_15"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_16"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_17"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_18"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_19"),
+                        record.get("ADDITIONAL_TREATMENT_TYPE_20"),
+                        record.get("MATERIAL_TYPE"),
+                        record.get("MATERIAL_F_LENS_CODE"),
+                        record.get("MATERIAL_F_COLOR_COAT_CODE"),
+                        record.get("MATERIAL_F_LENS_NAME"),
+                        record.get("MATERIAL_F_LENS_COLOR"),
+                        record.get("MATERIAL_F_LENS_COAT"),
+                        record.get("MATERIAL_F_LENS_CYLINDER_TYPE"),
+                        record.get("MATERIAL_F_LENS_SPHERE"),
+                        record.get("MATERIAL_F_LENS_CYLINDER"),
+                        record.get("MATERIAL_F_LENS_AXIS"),
+                        record.get("MATERIAL_F_LENS_ADDITION"),
+                        record.get("MATERIAL_F_LENS_DIAMETER"),
+                        record.get("MATERIAL_F_OPC"),
+                        record.get("MATERIAL_S_LENS_CODE"),
+                        record.get("MATERIAL_S_LENS_NAME"),
+                        record.get("MATERIAL_S_LENS_COLOR"),
+                        record.get("MATERIAL_S_LENS_MAKER"),
+                        record.get("MATERIAL_S_LENS_NOMINAL_BC"),
+                        record.get("MATERIAL_S_LENS_DIAMETER"),
+                        record.get("MATERIAL_S_LENS_THICKNESS_TYPE"),
+                        record.get("MATERIAL_S_LENS_ADDITION"),
+                        record.get("MATERIAL_S_OPC"),
+                        record.get("MATERIAL_R_LENS_CODE"),
+                        record.get("MATERIAL_R_COLOR_COAT_CODE"),
+                        record.get("MATERIAL_R_LENS_NAME"),
+                        record.get("MATERIAL_R_LENS_COLOR"),
+                        record.get("MATERIAL_R_LENS_COAT"),
+                        record.get("MATERIAL_R_LENS_CYLINDER_TYPE"),
+                        record.get("MATERIAL_R_LENS_SPHERE"),
+                        record.get("MATERIAL_R_LENS_CYLINDER"),
+                        record.get("MATERIAL_R_LENS_AXIS"),
+                        record.get("MATERIAL_R_LENS_ADDITION"),
+                        record.get("MATERIAL_R_LENS_DIAMETER"),
+                        LocalDateTime.parse(record.get("AMDDATE"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSS")));
 
-            logLines.add(logLine);
+                logLines.add(logLine);
+            }
+            result = logLines;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw e;
         }
-        return logLines;
+        return result;
     }
 
-    public List<ProsesLogTable> ubahKeProsesLogTables(ArrayList<String> data){
-        List<ProsesLogTable> logTables = new ArrayList<>();
-        for (String tables: data) {
-            ProsesLogTable logTable = new ProsesLogTable();
-            String[] coloms = tables.split(",");
-            logTable.setCompleted(coloms[0]);
-            logTable.setCmpnycd(coloms[1]);
-            logTable.setRcvno(coloms[2]);
-            logTable.setRxArrangementNumber(coloms[3]);
-            logTable.setProcessLogCount(Integer.parseInt(coloms[4]));
-            logTable.setPassDate(coloms[5]);
-            logTable.setPassTime(coloms[6]);
-            logTable.setProductionCompanyCode(coloms[7]);
-            logTable.setProductionPlaceCode(coloms[8]);
-            logTable.setBreakageCount(Integer.parseInt(coloms[9]));
-            logTable.setBreakageId(coloms[10]);
-            logTable.setTotdetline(Integer.parseInt(coloms[11]));
-            logTable.setAmddate(LocalDateTime.parse(coloms[12], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSS")));
+    public List<ProsesLogTable> csvKeLogTables(InputStream data) throws IOException{
+        try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(data, StandardCharsets.UTF_8));
+             CSVParser csvParser = new CSVParser(fileReader, CSVFormat.DEFAULT
+                     .withFirstRecordAsHeader()
+                     .withIgnoreHeaderCase().withTrim())
+        ) {
+            List<CSVRecord> records = csvParser.getRecords();
+            List<ProsesLogTable> logTables = new ArrayList<>();
+            for (CSVRecord record : records) {
+                ProsesLogTable logTable = new ProsesLogTable(
+                        record.get("Completed"),
+                        record.get("CMPNYCD"),
+                        record.get("RCVNO"),
+                        record.get("RX_ARRANGEMENT_NUMBER"),
+                        Integer.parseInt(record.get("PROCESS_LOG_COUNT")),
+                        record.get("PASS_DATE"),
+                        record.get("PASS_TIME"),
+                        record.get("PRODUCTION_COMPANY_CODE"),
+                        record.get("PRODUCTION_PLACE_CODE"),
+                        Integer.parseInt(record.get("BREAKAGE_COUNT")),
+                        record.get("BREAKAGE_ID"),
+                        Integer.parseInt(record.get("TOTDETLINE")),
+                        LocalDateTime.parse(record.get("AMDDATE"), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSS")));
 
-            logTables.add(logTable);
+                logTables.add(logTable);
+            }
+            return logTables;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw e;
         }
-        return logTables;
     }
 }
